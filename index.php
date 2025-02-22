@@ -13,7 +13,7 @@
         .form { display: none; padding: 10px; border: 2px inset black; background: #E0E0E0; }
         .form.active { display: block; }
         h2 { margin-bottom: 15px; font-size: 14px; }
-        input { width: 100%; padding: 5px; margin: 10px 0; border: 2px inset black; background: white; }
+        input, select { width: 100%; padding: 5px; margin: 10px 0; border: 2px inset black; background: white; }
         button { width: 100%; padding: 5px; background: #C0C0C0; border: 2px outset black; cursor: pointer; }
         button:active { border: 2px inset black; }
         .toggle-link { margin-top: 10px; display: block; color: black; cursor: pointer; text-decoration: underline; }
@@ -43,6 +43,12 @@
             <input type="text" placeholder="Full Name" required>
             <input type="email" placeholder="Email" required>
             <input type="password" placeholder="Password" required>
+            <select required>
+                <option value="">Select Role</option>
+                <option value="Admin">Admin</option>
+                <option value="Manager">Manager</option>
+                <option value="User">User</option>
+            </select>
             <button>Register</button>
             <span class="toggle-link" onclick="toggleForm()">Already have an account? Login here!</span>
         </div>
