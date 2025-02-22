@@ -17,9 +17,13 @@
         button { width: 100%; padding: 5px; background: #C0C0C0; border: 2px outset black; cursor: pointer; }
         button:active { border: 2px inset black; }
         .toggle-link { margin-top: 10px; display: block; color: black; cursor: pointer; text-decoration: underline; }
+        .icon { margin-top: 20px; cursor: pointer; background: #C0C0C0; padding: 10px; border: 2px outset black; display: none; }
+        .taskbar { position: absolute; bottom: 0; width: 100%; background: #C0C0C0; border-top: 2px solid black; padding: 5px; display: flex; }
+        .taskbar-icon { background: #E0E0E0; padding: 5px 10px; border: 2px outset black; cursor: pointer; margin-right: 5px; display: none; }
     </style>
 </head>
 <body>
+    <div id="appIcon" class="icon" onclick="openApp()">🖥️ Open Login/Register</div>
     
     <div id="appWindow" class="container">
         <div class="title-bar">
@@ -44,6 +48,10 @@
         </div>
     </div>
     
+    <div class="taskbar">
+        <div id="taskbarApp" class="taskbar-icon" onclick="openApp()">🖥️ Login/Register</div>
+    </div>
+    
     <script>
         function toggleForm() {
             document.getElementById('loginForm').classList.toggle('active');
@@ -53,11 +61,13 @@
         function closeApp() {
             document.getElementById('appWindow').style.display = 'none';
             document.getElementById('appIcon').style.display = 'block';
+            document.getElementById('taskbarApp').style.display = 'none';
         }
         
         function openApp() {
             document.getElementById('appWindow').style.display = 'block';
             document.getElementById('appIcon').style.display = 'none';
+            document.getElementById('taskbarApp').style.display = 'block';
         }
     </script>
 </body>
