@@ -88,8 +88,8 @@ if (isset($_GET['logout'])) {
 </head>
 <body>
 <div class="desktop-icon" onclick="openProgram()">
-    <img src="icon.png" alt="Program Icon">
-    <div>My Program</div>
+    <img src="icons/computer.png" alt="Program Icon">
+    <div>Computer</div>
 </div>
 <div class="taskbar" id="taskbar"></div>
 <?php if (isset($_SESSION['user'])): ?>
@@ -141,6 +141,12 @@ if (isset($_GET['logout'])) {
 
     function closeProgram() {
         document.getElementById('programWindow').style.display = 'none';
+        let task = document.getElementById('task');
+        if (task) task.remove();
+    }
+
+    function openProgram() {
+        document.getElementById('programWindow').style.display = 'block';
         let taskbar = document.getElementById('taskbar');
         if (!document.getElementById('task')) {
             let task = document.createElement('div');
@@ -150,12 +156,6 @@ if (isset($_GET['logout'])) {
             task.onclick = openProgram;
             taskbar.appendChild(task);
         }
-    }
-
-    function openProgram() {
-        document.getElementById('programWindow').style.display = 'block';
-        let task = document.getElementById('task');
-        if (task) task.remove();
     }
 </script>
 </body>
