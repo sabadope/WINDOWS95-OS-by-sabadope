@@ -60,6 +60,30 @@ if (isset($_GET['logout'])) {
     header('Location: index.php');
     exit();
 }
+
+
+// Handle file uploads
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['file'])) {
+    if (!isset($_SESSION['user'])) {
+        die("Unauthorized access");
+    }
+    
+    $role = $_SESSION['user']['role'];
+    $uploadDir = "uploads/$role/";
+    
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+    
+    $fileName = basename($_FILES['file']['name']);
+    $targetFile = $uploadDir . $fileName;
+    
+    if (move_uploaded_file($_FILES['file']['tmp_name'], $targetFile)) {
+        echo "File uploaded successfully.";
+    } else {
+        echo "File upload failed.";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -133,6 +157,30 @@ if (isset($_GET['logout'])) {
             <span class="toggle-link" onclick="toggleForm()">Already have an account? Login here!</span>
         </div>
     </div>
+<?php endif; ?>
+<?php if (isset($_SESSION['user'])): ?>
+    <h2>Welcome, <?php echo $_SESSION['user']['name']; ?>!</h2>
+    <p>You are logged in as <strong><?php echo ucfirst($_SESSION['user']['role']); ?></strong>.</p>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+    <h3>Your Uploaded Files:</h3>
+    <ul>
+        <?php
+        $role = $_SESSION['user']['role'];
+        $uploadDir = "uploads/$role/";
+        if (file_exists($uploadDir)) {
+            $files = array_diff(scandir($uploadDir), ['.', '..']);
+            foreach ($files as $file) {
+                echo "<li><a href='$uploadDir$file' target='_blank'>$file</a></li>";
+            }
+        }
+        ?>
+    </ul>
+    <a href="?logout=true">Logout</a>
+<?php else: ?>
+    <p>Please <a href="index.php">login</a>.</p>
 <?php endif; ?>
 <script>
     function toggleForm() {
