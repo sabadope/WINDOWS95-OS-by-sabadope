@@ -66,11 +66,13 @@ if (isset($_GET['logout'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 95 Login/Register</title>
+    <title>Windows 98 Login/Register</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "MS Sans Serif", sans-serif; }
-        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #008080; }
-        .container { width: 350px; padding: 20px; background: #C0C0C0; border: 2px solid black; box-shadow: 4px 4px black; text-align: center; position: relative; }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100vh; background: #008080; position: relative; }
+        .desktop-icon { position: absolute; top: 20px; left: 20px; cursor: pointer; text-align: center; color: white; }
+        .desktop-icon img { width: 50px; height: 50px; }
+        .container { width: 350px; padding: 20px; background: #C0C0C0; border: 2px solid black; box-shadow: 4px 4px black; text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; }
         .title-bar { background: navy; color: white; padding: 5px; text-align: left; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .close-btn { background: red; color: white; border: none; width: 20px; height: 20px; text-align: center; cursor: pointer; font-weight: bold; }
         .form { display: none; padding: 10px; border: 2px inset black; background: #E0E0E0; }
@@ -80,27 +82,28 @@ if (isset($_GET['logout'])) {
         button { width: 100%; padding: 5px; background: #C0C0C0; border: 2px outset black; cursor: pointer; }
         button:active { border: 2px inset black; }
         .toggle-link { margin-top: 10px; display: block; color: black; cursor: pointer; text-decoration: underline; }
-        .icon { margin-top: 20px; cursor: pointer; background: #C0C0C0; padding: 10px; border: 2px outset black; display: none; }
-        .taskbar { position: absolute; bottom: 0; width: 100%; background: #C0C0C0; border-top: 2px solid black; padding: 5px; display: flex; }
-        .taskbar-icon { background: #E0E0E0; padding: 5px 10px; border: 2px outset black; cursor: pointer; margin-right: 5px; display: none; }
+        .taskbar { width: 100%; height: 30px; background: #C0C0C0; border-top: 2px solid black; display: flex; align-items: center; padding: 5px; position: absolute; bottom: 0; left: 0; }
+        .taskbar .task { padding: 5px; background: #E0E0E0; border: 1px solid black; margin-right: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
+<div class="desktop-icon" onclick="openProgram()">
+    <img src="icon.png" alt="Program Icon">
+    <div>My Program</div>
+</div>
+<div class="taskbar" id="taskbar"></div>
 <?php if (isset($_SESSION['user'])): ?>
-    <div class="container">
+    <div class="container" id="programWindow">
         <div class="title-bar">
             <?php echo ucfirst($_SESSION['user']['role']); ?> Dashboard
-            <button class="close-btn" onclick="closeApp()">X</button>
+            <button class="close-btn" onclick="closeProgram()">X</button>
         </div>
-        
-        <p style="margin-top: 10px;">You are logged in as <strong><?php echo ucfirst($_SESSION['user']['role']); ?></strong>.</p>
+        <h2>Welcome, <?php echo $_SESSION['user']['name']; ?>!</h2>
+        <p>You are logged in as <strong><?php echo ucfirst($_SESSION['user']['role']); ?></strong>.</p>
     </div>
 <?php else: ?>
-    <div class="container">
-        <div class="title-bar">Login/Register
-            <a href="?logout=true"><button class="close-btn">X</button></a>
-        </div>
-
+    <div class="container" id="programWindow">
+        <div class="title-bar">Login/Register <button class="close-btn" onclick="closeProgram()">X</button></div>
         <div id="loginForm" class="form active">
             <h2>Login</h2>
             <form method="POST">
@@ -129,10 +132,6 @@ if (isset($_GET['logout'])) {
             <span class="toggle-link" onclick="toggleForm()">Already have an account? Login here!</span>
         </div>
     </div>
-
-    <div class="taskbar">
-        <div id="taskbarApp" class="taskbar-icon" onclick="openApp()">🖥️ Login/Register</div>
-    </div>
 <?php endif; ?>
 <script>
     function toggleForm() {
@@ -140,16 +139,23 @@ if (isset($_GET['logout'])) {
         document.getElementById('registerForm').classList.toggle('active');
     }
 
-    function closeApp() {
-        document.getElementById('appWindow').style.display = 'none';
-        document.getElementById('appIcon').style.display = 'block';
-        document.getElementById('taskbarApp').style.display = 'none';
+    function closeProgram() {
+        document.getElementById('programWindow').style.display = 'none';
+        let taskbar = document.getElementById('taskbar');
+        if (!document.getElementById('task')) {
+            let task = document.createElement('div');
+            task.className = 'task';
+            task.id = 'task';
+            task.innerText = 'My Program';
+            task.onclick = openProgram;
+            taskbar.appendChild(task);
+        }
     }
-    
-    function openApp() {
-        document.getElementById('appWindow').style.display = 'block';
-        document.getElementById('appIcon').style.display = 'none';
-        document.getElementById('taskbarApp').style.display = 'block';
+
+    function openProgram() {
+        document.getElementById('programWindow').style.display = 'block';
+        let task = document.getElementById('task');
+        if (task) task.remove();
     }
 </script>
 </body>
