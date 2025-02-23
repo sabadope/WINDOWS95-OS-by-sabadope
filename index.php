@@ -69,7 +69,7 @@ if (isset($_GET['logout'])) {
     <title>Windows 98 Login/Register</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "MS Sans Serif", sans-serif; }
-        body { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100vh; background: #008080; position: relative; }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100vh; background: #008080; position: relative; overflow: hidden; }
         .desktop-icon { position: absolute; top: 20px; left: 20px; cursor: pointer; text-align: center; color: white; }
         .desktop-icon img { width: 50px; height: 50px; }
         .container { width: 350px; padding: 20px; background: #C0C0C0; border: 2px solid black; box-shadow: 4px 4px black; text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; }
@@ -96,7 +96,7 @@ if (isset($_GET['logout'])) {
     <div class="container" id="programWindow">
         <div class="title-bar">
             <?php echo ucfirst($_SESSION['user']['role']); ?> Dashboard
-            <button class="close-btn" onclick="closeProgram()">X</button>
+            <a href="?logout=true"><button class="close-btn">X</button></a>
         </div>
         <h2>Welcome, <?php echo $_SESSION['user']['name']; ?>!</h2>
         <p>You are logged in as <strong><?php echo ucfirst($_SESSION['user']['role']); ?></strong>.</p>
