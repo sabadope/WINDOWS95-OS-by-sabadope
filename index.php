@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
                     'name' => $user['name'],
                     'role' => $user['role']
                 ];
+                $_SESSION['auto_open_dashboard'] = true;
                 header('Location: index.php');
                 exit();
             }
@@ -157,6 +158,14 @@ if (isset($_GET['logout'])) {
             taskbar.appendChild(task);
         }
     }
+
+    // Automatically open the dashboard if login was successful
+    <?php if (isset($_SESSION['auto_open_dashboard']) && $_SESSION['auto_open_dashboard']) : ?>
+        window.onload = function() {
+            openProgram();
+        };
+        <?php unset($_SESSION['auto_open_dashboard']); ?>
+    <?php endif; ?>
 </script>
 </body>
 </html>
