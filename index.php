@@ -1,65 +1,63 @@
 <?php
-    session_start();
+session_start();
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "windows95";
 
-    $servername = "localhost";
-    $username = "root"; // Change if needed
-    $password = ""; // Change if needed
-    $database = "win98_auth";
+$conn = new mysqli($servername, $username, $password, $database);
+if ($conn->connect_error) {
+    die(json_encode(["status" => "error", "message" => "Connection failed: " . $conn->connect_error]));
+}
 
-    $conn = new mysqli($servername, $username, $password, $database);
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
+    $action = $_POST['action'];
 
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
+    if ($action === "register") {
+        $full_name = $_POST['full_name'];
+        $email = $_POST['email'];
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $role = $_POST['role'];
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        if (isset($_POST['register'])) { // Registration process
-            $full_name = $_POST['full_name'];
-            $email = $_POST['email'];
-            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-            $role = $_POST['role'];
+        $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $full_name, $email, $password, $role);
 
-            $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $full_name, $email, $password, $role);
-
-            if ($stmt->execute()) {
-                $_SESSION['message'] = "Registration successful! You can now log in.";
-            } else {
-                $_SESSION['message'] = "Error: " . $stmt->error;
-            }
-            $stmt->close();
-        } elseif (isset($_POST['login'])) { // Login process
-            $email = $_POST['email'];
-            $password = $_POST['password'];
-
-            $stmt = $conn->prepare("SELECT id, full_name, password, role FROM users WHERE email = ?");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $stmt->store_result();
-            $stmt->bind_result($id, $full_name, $hashed_password, $role);
-            $stmt->fetch();
-
-            if ($stmt->num_rows > 0 && password_verify($password, $hashed_password)) {
-                $_SESSION['user_id'] = $id;
-                $_SESSION['full_name'] = $full_name;
-                $_SESSION['role'] = $role;
-
-                if ($role == "Admin") {
-                    header("Location: admin.php");
-                } elseif ($role == "Manager") {
-                    header("Location: manager.php");
-                } else {
-                    header("Location: user.php");
-                }
-                exit();
-            } else {
-                $_SESSION['message'] = "Invalid email or password!";
-            }
-            $stmt->close();
+        if ($stmt->execute()) {
+            echo json_encode(["status" => "success", "message" => "Registration successful!"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error: " . $stmt->error]);
         }
+        $stmt->close();
     }
 
+    if ($action === "login") {
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+
+        $stmt = $conn->prepare("SELECT id, full_name, password, role FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($id, $full_name, $hashed_password, $role);
+        $stmt->fetch();
+
+        if (password_verify($password, $hashed_password)) {
+            $_SESSION['user_id'] = $id;
+            $_SESSION['full_name'] = $full_name;
+            $_SESSION['role'] = $role;
+
+            echo json_encode([
+                "status" => "success",
+                "message" => "Login successful!",
+                "user" => ["full_name" => $full_name, "role" => $role]
+            ]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Invalid email or password!"]);
+        }
+        $stmt->close();
+    }
     $conn->close();
+}
 ?>
 
 
@@ -97,28 +95,38 @@
             Login/Register
             <button class="close-btn" onclick="closeApp()">X</button>
         </div>
-        <div id="loginForm" class="form active">
-            <h2>Login</h2>
-            <input type="email" placeholder="Email" required>
-            <input type="password" placeholder="Password" required>
-            <button>Login</button>
-            <span class="toggle-link" onclick="toggleForm()">Don't have an account? Register now!</span>
+        <div id="authContainer">
+            <div id="loginForm" class="form active">
+                <h2>Login</h2>
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button onclick="handleLogin()">Login</button>
+                <span class="toggle-link" onclick="toggleForm()">Don't have an account? Register now!</span>
+            </div>
+
+            <div id="registerForm" class="form">
+                <h2>Register</h2>
+                <input type="text" id="regName" placeholder="Full Name" required>
+                <input type="email" id="regEmail" placeholder="Email" required>
+                <input type="password" id="regPassword" placeholder="Password" required>
+                <select id="regRole" required>
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="User">User</option>
+                </select>
+                <button onclick="handleRegister()">Register</button>
+                <span class="toggle-link" onclick="toggleForm()">Already have an account? Login here!</span>
+            </div>
         </div>
-        
-        <div id="registerForm" class="form">
-            <h2>Register</h2>
-            <input type="text" placeholder="Full Name" required>
-            <input type="email" placeholder="Email" required>
-            <input type="password" placeholder="Password" required>
-            <select required>
-                <option value="" disabled selected>Select Role</option>
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="User">User</option>
-            </select>
-            <button>Register</button>
-            <span class="toggle-link" onclick="toggleForm()">Already have an account? Login here!</span>
+
+        <!-- User Dashboard -->
+        <div id="userContainer" style="display:none;">
+            <h2>Welcome, <span id="userName"></span>!</h2>
+            <p>Your role: <span id="userRole"></span></p>
+            <button onclick="logout()">Logout</button>
         </div>
+
     </div>
     
     <div class="taskbar">
@@ -141,6 +149,57 @@
             document.getElementById('appWindow').style.display = 'block';
             document.getElementById('appIcon').style.display = 'none';
             document.getElementById('taskbarApp').style.display = 'block';
+        }
+
+        function toggleForm() {
+            document.getElementById('loginForm').classList.toggle('active');
+            document.getElementById('registerForm').classList.toggle('active');
+        }
+
+        function handleRegister() {
+            let fullName = document.getElementById('regName').value;
+            let email = document.getElementById('regEmail').value;
+            let password = document.getElementById('regPassword').value;
+            let role = document.getElementById('regRole').value;
+
+            fetch("auth.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `action=register&full_name=${fullName}&email=${email}&password=${password}&role=${role}`
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message));
+        }
+
+        function handleLogin() {
+            let email = document.getElementById('loginEmail').value;
+            let password = document.getElementById('loginPassword').value;
+
+            fetch("auth.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `action=login&email=${email}&password=${password}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    document.getElementById("userName").innerText = data.user.full_name;
+                    document.getElementById("userRole").innerText = data.user.role;
+
+                    document.getElementById("authContainer").style.display = "none";
+                    document.getElementById("userContainer").style.display = "block";
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function logout() {
+            fetch("logout.php", { method: "POST" })
+            .then(() => {
+                document.getElementById("authContainer").style.display = "block";
+                document.getElementById("userContainer").style.display = "none";
+            });
         }
     </script>
 </body>
