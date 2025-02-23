@@ -1,3 +1,77 @@
+<?php
+
+    session_start();
+
+    $servername = "localhost";
+    $username = "root"; // Change if needed
+    $password = ""; // Change if needed
+    $database = "win98_auth";
+
+    $conn = new mysqli($servername, $username, $password, $database);
+
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $full_name = $_POST['full_name'];
+        $email = $_POST['email'];
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hashing password
+        $role = $_POST['role'];
+
+        $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $full_name, $email, $password, $role);
+
+        if ($stmt->execute()) {
+            $_SESSION['message'] = "Registration successful! You can now log in.";
+            header("Location: trash-login.php"); // Redirect to login page
+            exit();
+        } else {
+            $_SESSION['message'] = "Error: " . $stmt->error;
+        }
+        $stmt->close();
+        $conn->close();
+    }
+
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+
+        $stmt = $conn->prepare("SELECT id, full_name, password, role FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($id, $full_name, $hashed_password, $role);
+        $stmt->fetch();
+
+        if (password_verify($password, $hashed_password)) {
+            $_SESSION['user_id'] = $id;
+            $_SESSION['full_name'] = $full_name;
+            $_SESSION['role'] = $role;
+
+            // Redirect based on role
+            if ($role == "Admin") {
+                header("Location: admin.php");
+            } elseif ($role == "Manager") {
+                header("Location: manager.php");
+            } else {
+                header("Location: user.php");
+            }
+            exit();
+        } else {
+            $_SESSION['message'] = "Invalid email or password!";
+            header("Location: trash-login.php");
+            exit();
+        }
+        $stmt->close();
+        $conn->close();
+    }
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,7 +118,7 @@
             <input type="email" placeholder="Email" required>
             <input type="password" placeholder="Password" required>
             <select required>
-                <option value="">Select Role</option>
+                <option value="" disabled selected>Select Role</option>
                 <option value="Admin">Admin</option>
                 <option value="Manager">Manager</option>
                 <option value="User">User</option>
