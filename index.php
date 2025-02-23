@@ -16,9 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
         $stmt->bind_param("ssss", $name, $email, $password, $role);
 
         if ($stmt->execute()) {
-            echo json_encode(['status' => 'success', 'message' => 'Registration successful!']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Registration failed!']);
+            $_SESSION['user'] = [
+                'name' => $name,
+                'role' => $role
+            ];
+            header('Location: index.php');
+            exit();
         }
 
         $stmt->close();
@@ -40,12 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
                     'name' => $user['name'],
                     'role' => $user['role']
                 ];
-                echo json_encode(['status' => 'success', 'role' => $user['role'], 'name' => $user['name']]);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Invalid password.']);
+                header('Location: index.php');
+                exit();
             }
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'User not found.']);
         }
 
         $stmt->close();
@@ -80,6 +80,9 @@ if (isset($_GET['logout'])) {
         button { width: 100%; padding: 5px; background: #C0C0C0; border: 2px outset black; cursor: pointer; }
         button:active { border: 2px inset black; }
         .toggle-link { margin-top: 10px; display: block; color: black; cursor: pointer; text-decoration: underline; }
+        .icon { margin-top: 20px; cursor: pointer; background: #C0C0C0; padding: 10px; border: 2px outset black; display: none; }
+        .taskbar { position: absolute; bottom: 0; width: 100%; background: #C0C0C0; border-top: 2px solid black; padding: 5px; display: flex; }
+        .taskbar-icon { background: #E0E0E0; padding: 5px 10px; border: 2px outset black; cursor: pointer; margin-right: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -87,14 +90,17 @@ if (isset($_GET['logout'])) {
     <div class="container">
         <div class="title-bar">
             <?php echo ucfirst($_SESSION['user']['role']); ?> Dashboard
-            <a href="?logout=true"><button class="close-btn">X</button></a>
+            <button class="close-btn" onclick="closeApp()">X</button>
         </div>
-        <h2>Welcome, <?php echo $_SESSION['user']['name']; ?>!</h2>
-        <p>You are logged in as <strong><?php echo ucfirst($_SESSION['user']['role']); ?></strong>.</p>
+        
+        <p style="margin-top: 10px;">You are logged in as <strong><?php echo ucfirst($_SESSION['user']['role']); ?></strong>.</p>
     </div>
 <?php else: ?>
     <div class="container">
-        <div class="title-bar">Login/Register</div>
+        <div class="title-bar">Login/Register
+            <a href="?logout=true"><button class="close-btn">X</button></a>
+        </div>
+
         <div id="loginForm" class="form active">
             <h2>Login</h2>
             <form method="POST">
@@ -123,11 +129,27 @@ if (isset($_GET['logout'])) {
             <span class="toggle-link" onclick="toggleForm()">Already have an account? Login here!</span>
         </div>
     </div>
+
+    <div class="taskbar">
+        <div id="taskbarApp" class="taskbar-icon" onclick="openApp()">🖥️ Login/Register</div>
+    </div>
 <?php endif; ?>
 <script>
     function toggleForm() {
         document.getElementById('loginForm').classList.toggle('active');
         document.getElementById('registerForm').classList.toggle('active');
+    }
+
+    function closeApp() {
+        document.getElementById('appWindow').style.display = 'none';
+        document.getElementById('appIcon').style.display = 'block';
+        document.getElementById('taskbarApp').style.display = 'none';
+    }
+    
+    function openApp() {
+        document.getElementById('appWindow').style.display = 'block';
+        document.getElementById('appIcon').style.display = 'none';
+        document.getElementById('taskbarApp').style.display = 'block';
     }
 </script>
 </body>
